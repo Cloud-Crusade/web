@@ -13,7 +13,9 @@ const PAGE_SIZE = 12;
 export default function EventListPage() {
   const { isAuthenticated } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const page = Math.max(1, Number(searchParams.get('page') ?? '1'));
+  // 잘못된 page 파라미터(?page=foo 등)는 1로 폴백
+  const parsedPage = Number.parseInt(searchParams.get('page') ?? '1', 10);
+  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 
   const { data, isPending, isError, refetch, isPlaceholderData } = useEvents({
     page,
