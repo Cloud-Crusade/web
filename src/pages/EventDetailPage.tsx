@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EventImage } from '@/features/events/components/EventImage';
 import { useEvent } from '@/features/events/hooks';
+import { ReserveAction } from '@/features/reservations/components/ReserveAction';
 import { toApiError } from '@/lib/apiError';
 import { formatDateRange } from '@/lib/format';
 
@@ -53,6 +54,8 @@ export default function EventDetailPage() {
 
         {data.body && <p className="whitespace-pre-wrap leading-relaxed">{data.body}</p>}
       </div>
+
+      <ReserveAction eventId={data.event_id} />
     </article>
   );
 }
