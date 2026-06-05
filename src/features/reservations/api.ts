@@ -1,6 +1,11 @@
 import { apiClient } from '@/lib/apiClient';
 import type { PageParams } from '@/types/common';
-import type { ReservationAccepted, ReservationPage, ReservationRead } from '@/types/reservation';
+import type {
+  OccupiedSeats,
+  ReservationAccepted,
+  ReservationPage,
+  ReservationRead,
+} from '@/types/reservation';
 
 import type { ReservationCreateInput } from './schema';
 
@@ -14,6 +19,13 @@ export const reservationApi = {
 
   async get(reservationId: string): Promise<ReservationRead> {
     const { data } = await apiClient.get<ReservationRead>(`${BASE}/${reservationId}`);
+    return data;
+  },
+
+  async occupiedSeats(eventId: string): Promise<OccupiedSeats> {
+    const { data } = await apiClient.get<OccupiedSeats>(`${BASE}/seats/occupied`, {
+      params: { event_id: eventId },
+    });
     return data;
   },
 
