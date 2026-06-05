@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, type Location, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +19,7 @@ import { type LoginInput, loginSchema } from '@/features/auth/schema';
 import { isUnauthorized, toApiError } from '@/lib/apiError';
 
 interface FromState {
-  from?: { pathname: string };
+  from?: Location;
 }
 
 export default function LoginPage() {
@@ -33,10 +33,11 @@ export default function LoginPage() {
     defaultValues: { user_name: '', password: '' },
   });
 
-  const redirectTo =
-    (location.state as FromState | null)?.from?.pathname ??
-    searchParams.get('redirect') ??
-    '/events';
+  // 검색 파라미터·해시까지 보존해 원래 URL 그대로 복귀 (예: /events?page=2)
+  const from = (location.state as FromState | null)?.from;
+  const redirectTo = from
+    ? `${from.pathname}${from.search}${from.hash}`
+    : (searchParams.get('redirect') ?? '/events');
 
   const onSubmit = form.handleSubmit((values) => {
     login.mutate(values, {
