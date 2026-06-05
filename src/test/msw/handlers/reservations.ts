@@ -19,7 +19,16 @@ export const reservationHandlers = [
 
   http.get(`${BASE}/reservations/seats/occupied`, ({ request }) => {
     const eventId = new URL(request.url).searchParams.get('event_id');
-    return HttpResponse.json({ event_id: eventId, occupied: [2, 4] });
+    // 실제 API 계약: event_id 필수 → 누락 시 422 (FastAPI RequestValidationError)
+    if (!eventId) {
+      return HttpResponse.json(
+        { code: 'VALIDATION_ERROR', message: '요청 검증 실패', details: {} },
+        { status: 422 },
+      );
+    }
+    // 시드 이벤트(e1)만 점유 좌석 보유, 그 외 이벤트는 빈 배열
+    const occupied = eventId === 'e1' ? [2, 4] : [];
+    return HttpResponse.json({ event_id: eventId, occupied });
   }),
 
   http.get(`${BASE}/reservations/:reservationId`, ({ params }) =>

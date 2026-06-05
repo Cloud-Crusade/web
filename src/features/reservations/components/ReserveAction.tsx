@@ -104,9 +104,13 @@ export function ReserveAction({
                   min={1}
                   max={totalSeats}
                   {...field}
-                  onChange={(e) =>
-                    field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)
-                  }
+                  onChange={(e) => {
+                    field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber);
+                    // 점유 에러는 수동 setError 라 자동 revalidate 안 됨 → 값 변경 시 직접 해제
+                    if (form.formState.errors.reserved_num?.type === 'occupied') {
+                      form.clearErrors('reserved_num');
+                    }
+                  }}
                 />
               </FormControl>
               {occupied.length > 0 && (
