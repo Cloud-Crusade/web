@@ -36,7 +36,7 @@ export default function ReservationDetailPage() {
   }
 
   if (!reservationId || isError || !data) {
-    const notFound = !reservationId || !data || toApiError(error).status === 404;
+    const notFound = !reservationId || (isError && toApiError(error).status === 404);
     return (
       <EmptyState
         title={notFound ? '예매를 찾을 수 없어요' : '예매를 불러오지 못했어요'}
