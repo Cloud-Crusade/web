@@ -30,7 +30,7 @@ export default tseslint.config(
   },
   {
     // shadcn/ui 컴포넌트 + Context 파일은 비컴포넌트(변형 상수·훅)를 함께 export → fast-refresh 경고 면제
-    files: ['src/components/ui/**', '**/*Context.tsx'],
+    files: ['src/components/ui/**', '**/*Context.tsx', 'src/test/**'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },
