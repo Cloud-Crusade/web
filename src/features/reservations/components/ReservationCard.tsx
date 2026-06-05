@@ -15,7 +15,7 @@ export function ReservationCard({ reservation }: { reservation: ReservationRead 
       <Card className="transition-colors hover:bg-accent">
         <CardContent className="flex items-center justify-between gap-4 p-4">
           <div className="space-y-1">
-            <p className="font-medium">{reservation.reserved_num}매 예매</p>
+            <p className="font-medium">좌석 {reservation.reserved_num}번</p>
             <p className="text-sm text-muted-foreground">
               {formatDateTime(reservation.created_at)}
             </p>

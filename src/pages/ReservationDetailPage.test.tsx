@@ -23,7 +23,7 @@ describe('ReservationDetailPage', () => {
 
   it('예매 정보를 보여준다', async () => {
     renderDetail('r1');
-    expect(await screen.findByText('2매')).toBeInTheDocument();
+    expect(await screen.findByText('2번')).toBeInTheDocument();
     expect(screen.getByText('예매 완료')).toBeInTheDocument();
   });
 
