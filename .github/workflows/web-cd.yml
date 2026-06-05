@@ -1,9 +1,12 @@
 name: web cd
 
 on:
-  push:
+  workflow_dispatch:
+
+  pull_request:
     branches:
       - main
+    types: [closed]
 
 jobs:
   deploy:
