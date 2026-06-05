@@ -8,18 +8,18 @@
 
 ## 기술 스택
 
-| 영역 | 기술 |
-|---|---|
-| 빌드·번들러 | Vite |
-| UI 라이브러리 | React (SPA) |
-| 언어 | TypeScript |
-| 라우팅 | React Router |
-| 스타일링 | Tailwind CSS |
-| 컴포넌트 | shadcn/ui (Radix 기반) |
-| 서버 상태·캐시 | TanStack Query (React Query) |
+| 영역            | 기술                              |
+| --------------- | --------------------------------- |
+| 빌드·번들러     | Vite                              |
+| UI 라이브러리   | React (SPA)                       |
+| 언어            | TypeScript                        |
+| 라우팅          | React Router                      |
+| 스타일링        | Tailwind CSS                      |
+| 컴포넌트        | shadcn/ui (Radix 기반)            |
+| 서버 상태·캐시  | TanStack Query (React Query)      |
 | HTTP 클라이언트 | Axios (인터셉터로 토큰 주입·갱신) |
-| 폼·검증 | React Hook Form + Zod |
-| 패키지 매니저 | pnpm |
+| 폼·검증         | React Hook Form + Zod             |
+| 패키지 매니저   | pnpm                              |
 
 > 상태 관리는 **서버 상태(TanStack Query) 우선**. 전역 클라이언트 상태는 인증 토큰·사용자 정보 정도로 최소화합니다.
 
@@ -30,24 +30,26 @@
 API 도메인을 그대로 정보 구조(IA)에 매핑합니다. 인증이 필요한 화면은 🔒 로 표시합니다.
 
 ### 공개 영역
-| 화면 | 경로 | 연동 API |
-|---|---|---|
-| 로그인 | `/login` | `POST /auth/login`, `POST /auth/refresh` |
-| 회원가입 | `/signup` | `POST /auth/signup` |
-| 행사 목록 | `/events` | `GET /events` (페이지네이션) |
-| 행사 상세 | `/events/:eventId` | `GET /events/{event_id}` |
+
+| 화면      | 경로               | 연동 API                                 |
+| --------- | ------------------ | ---------------------------------------- |
+| 로그인    | `/login`           | `POST /auth/login`, `POST /auth/refresh` |
+| 회원가입  | `/signup`          | `POST /auth/signup`                      |
+| 행사 목록 | `/events`          | `GET /events` (페이지네이션)             |
+| 행사 상세 | `/events/:eventId` | `GET /events/{event_id}`                 |
 
 ### 인증 영역 🔒
-| 화면 | 경로 | 연동 API |
-|---|---|---|
-| 행사 등록 | `/events/new` | `POST /events` |
-| 행사 수정 | `/events/:eventId/edit` | `PATCH /events/{event_id}`, `DELETE /events/{event_id}` |
-| 예매하기 | `/events/:eventId` 내 액션 | `POST /reservations` (202 비동기) |
-| 내 예매 목록 | `/me/reservations` | `GET /reservations` |
-| 예매 상세 · 취소 | `/me/reservations/:reservationId` | `GET /reservations/{id}`, `DELETE /reservations/{id}` (202 비동기) |
-| 결제하기 | 예매 상세 내 액션 | `POST /payments` (202 비동기) |
-| 내 결제 내역 | `/me/payments` | `GET /payments`, `GET /payments/{id}` |
-| 내 정보 | `/me` | `GET /users/me` |
+
+| 화면             | 경로                           | 연동 API                                                           |
+| ---------------- | ------------------------------ | ------------------------------------------------------------------ |
+| 행사 등록        | `/events/new`                  | `POST /events`                                                     |
+| 행사 수정        | `/events/:eventId/edit`        | `PATCH /events/{event_id}`, `DELETE /events/{event_id}`            |
+| 예매하기         | `/events/:eventId` 내 액션     | `POST /reservations` (202 비동기)                                  |
+| 내 예매 목록     | `/reservations`                | `GET /reservations`                                                |
+| 예매 상세 · 취소 | `/reservations/:reservationId` | `GET /reservations/{id}`, `DELETE /reservations/{id}` (202 비동기) |
+| 결제하기         | 예매 상세 내 액션              | `POST /payments` (202 비동기)                                      |
+| 내 결제 내역     | `/payments`                    | `GET /payments`, `GET /payments/{id}`                              |
+| 내 정보          | `/me`                          | `GET /users/me`                                                    |
 
 > 행사 등록·수정·삭제는 로그인 사용자라면 누구나 가능합니다(백엔드에 관리자 역할 구분이 없음). 권한 분리는 API 범위 밖이므로 화면에서도 도입하지 않습니다.
 
@@ -60,11 +62,13 @@ API 도메인을 그대로 정보 구조(IA)에 매핑합니다. 인증이 필�
 - 백엔드 실행 방법은 [`cc/app`](../app) 참조 (docker-compose 로 PostgreSQL × 2 · Redis 기동).
 
 ### 인증 흐름 (JWT)
+
 - 로그인 시 `access_token`(30분) + `refresh_token`(14일)을 발급받습니다.
 - 모든 보호 요청은 `Authorization: Bearer <access_token>` 헤더로 전송합니다.
 - access 토큰 만료(401) 시 Axios 인터셉터가 `POST /auth/refresh` 로 자동 갱신 후 재시도하고, 갱신도 실패하면 로그인 화면으로 보냅니다.
 
 ### 비동기 write 패턴 (예매·결제) — UX 핵심
+
 예매·결제 생성/취소는 **즉시 처리되지 않습니다.** 백엔드가 SQS 로 발행하고 Lambda 가 처리하는 구조라, 요청은 `202 Accepted` 와 함께 식별자만 즉시 반환합니다.
 
 ```jsonc
@@ -81,19 +85,24 @@ API 도메인을 그대로 정보 구조(IA)에 매핑합니다. 인증이 필�
 > 조회(read)는 동기입니다. 예매 단건·결제 단건 조회는 백엔드에서 캐시 우선(cache-aside)으로 응답하므로 생성 직후에도 일관되게 보입니다.
 
 ### 표준 에러 응답
+
 백엔드는 모든 에러를 아래 형식으로 반환합니다. 공통 에러 핸들러에서 `code` 기준으로 토스트·필드 에러를 분기합니다.
 
 ```json
-{ "code": "SEAT_ALREADY_TAKEN", "message": "이미 선점된 좌석입니다", "details": { "event_id": "…" } }
+{
+  "code": "SEAT_ALREADY_TAKEN",
+  "message": "이미 선점된 좌석입니다",
+  "details": { "event_id": "…" }
+}
 ```
 
-| 상태 | 의미 | 화면 처리 |
-|---|---|---|
-| 401 | 인증 필요·토큰 만료 | refresh 재시도 → 실패 시 로그인 이동 |
-| 404 | 리소스 없음 / 본인 것 아님 | 빈 상태 또는 목록 복귀 |
-| 409 | 좌석 선점 충돌 | 인라인 경고 + 목록 갱신 |
-| 422 | 요청 검증 실패 | 폼 필드별 에러 표시 |
-| 503 | 백프레셔(과부하) | `Retry-After` 존중 + 재시도 안내 |
+| 상태 | 의미                       | 화면 처리                            |
+| ---- | -------------------------- | ------------------------------------ |
+| 401  | 인증 필요·토큰 만료        | refresh 재시도 → 실패 시 로그인 이동 |
+| 404  | 리소스 없음 / 본인 것 아님 | 빈 상태 또는 목록 복귀               |
+| 409  | 좌석 선점 충돌             | 인라인 경고 + 목록 갱신              |
+| 422  | 요청 검증 실패             | 폼 필드별 에러 표시                  |
+| 503  | 백프레셔(과부하)           | `Retry-After` 존중 + 재시도 안내     |
 
 <br>
 
@@ -126,10 +135,12 @@ src/
 ## 시작하기
 
 ### 사전 요구
+
 - Node.js 20 LTS 이상, pnpm
 - 백엔드([`cc/app`](../app))가 `localhost:8020` 에서 기동 중일 것
 
 ### 설치 · 실행
+
 ```bash
 pnpm install
 pnpm dev          # 개발 서버 (Vite, 기본 http://localhost:5173)
@@ -140,9 +151,11 @@ pnpm typecheck    # tsc --noEmit
 ```
 
 ### 환경 변수 (`.env`)
+
 ```bash
 VITE_API_BASE_URL=http://localhost:8020
 ```
+
 > `.env` 는 커밋하지 않습니다. `.env.example` 만 저장소에 포함합니다.
 
 <br>
@@ -152,19 +165,22 @@ VITE_API_BASE_URL=http://localhost:8020
 협업 규약은 [`.github`](.github) 의 이슈·PR 템플릿과 `convention_check.yml` 을 단일 출처로 합니다. CI 가 커밋·PR 제목 형식을 강제합니다.
 
 ### 이슈
+
 템플릿 준수. 제목 형식: `[카테고리] 제목`
 
-| 카테고리 | 라벨 |
-|---|---|
-| `[FEATURE]` | `feature` |
-| `[BUG]` | `bug` |
+| 카테고리     | 라벨       |
+| ------------ | ---------- |
+| `[FEATURE]`  | `feature`  |
+| `[BUG]`      | `bug`      |
 | `[REFACTOR]` | `refactor` |
-| `[CHORE]` | `chore` |
+| `[CHORE]`    | `chore`    |
 
 ### 브랜치
+
 `카테고리/#이슈번호/브랜치명` — 예: `feature/#12/event-detail-page`
 
 ### 커밋
+
 `[카테고리]: 변경 내용` (한국어) — CI 강제 카테고리: **`FEAT` · `FIX` · `REFAC` · `DOCS` · `CHORE`**
 
 ```
@@ -173,9 +189,11 @@ VITE_API_BASE_URL=http://localhost:8020
 ```
 
 ### Pull Request
+
 `[카테고리#이슈번호] 제목` — 예: `[FEAT#12] 행사 상세 + 예매 액션`. 본문은 PR 템플릿(Summary / Changes / Review Points) 준수.
 
 ### 코드 스타일
+
 - 컴포넌트 `PascalCase`, 훅 `useXxx`, 변수·함수 `camelCase`, 상수 `UPPER_SNAKE_CASE`
 - 주석·커밋·PR 은 **한국어 단일** (식별자·외부 라이브러리 인용은 예외)
 - 서버 데이터는 직접 fetch 대신 **TanStack Query 훅**으로 캡슐화
