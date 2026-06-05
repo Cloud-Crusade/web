@@ -1,0 +1,18 @@
+node_modules
+dist
+dist-ssr
+coverage
+*.local
+
+# 환경 변수 (예시 파일만 커밋)
+.env
+.env.*
+!.env.example
+
+# 빌드 메타
+*.tsbuildinfo
+
+# 에디터·OS
+.DS_Store
+*.log
+.vite
