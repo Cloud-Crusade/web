@@ -16,7 +16,7 @@ describe('MyReservationsPage', () => {
 
   it('예매 목록을 보여준다', async () => {
     renderWithProviders(<MyReservationsPage />);
-    expect(await screen.findByText('2매 예매')).toBeInTheDocument();
+    expect(await screen.findByText('좌석 2번')).toBeInTheDocument();
   });
 
   it('예매가 없으면 빈 상태를 보여준다', async () => {

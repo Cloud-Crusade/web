@@ -63,7 +63,7 @@ export default function ReservationDetailPage() {
       </div>
 
       <dl className="space-y-3 rounded-lg border border-border p-4">
-        <Row label="예매 수량" value={`${data.reserved_num}매`} />
+        <Row label="좌석 번호" value={`${data.reserved_num}번`} />
         <Row label="예매일" value={formatDateTime(data.created_at)} />
         <Row
           label="행사"
