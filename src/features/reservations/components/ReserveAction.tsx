@@ -18,25 +18,31 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useCreateReservation } from '@/features/reservations/hooks';
 
-const MAX_QUANTITY = 10;
+// reserved_num 은 좌석 번호(1..total_seats) — 개수가 아니다
+const makeReserveFormSchema = (totalSeats: number) =>
+  z.object({
+    reserved_num: z
+      .number({ message: '좌석 번호를 입력하세요' })
+      .int()
+      .min(1, '좌석 번호는 1 이상이에요')
+      .max(totalSeats, `좌석 번호는 1~${totalSeats}번 중에서 선택하세요`),
+  });
+type ReserveFormValues = z.infer<ReturnType<typeof makeReserveFormSchema>>;
 
-const reserveFormSchema = z.object({
-  reserved_num: z
-    .number({ message: '수량을 입력하세요' })
-    .int()
-    .min(1, '1매 이상 선택하세요')
-    .max(MAX_QUANTITY, `최대 ${MAX_QUANTITY}매까지 가능해요`),
-});
-type ReserveFormValues = z.infer<typeof reserveFormSchema>;
-
-export function ReserveAction({ eventId }: { eventId: string }) {
+export function ReserveAction({
+  eventId,
+  totalSeats,
+}: {
+  eventId: string;
+  totalSeats: number;
+}) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const create = useCreateReservation();
 
   const form = useForm<ReserveFormValues>({
-    resolver: zodResolver(reserveFormSchema),
+    resolver: zodResolver(makeReserveFormSchema(totalSeats)),
     defaultValues: { reserved_num: 1 },
   });
 
@@ -74,12 +80,12 @@ export function ReserveAction({ eventId }: { eventId: string }) {
           name="reserved_num"
           render={({ field }) => (
             <FormItem className="w-28">
-              <FormLabel>예매 수량</FormLabel>
+              <FormLabel>좌석 번호</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min={1}
-                  max={MAX_QUANTITY}
+                  max={totalSeats}
                   {...field}
                   onChange={(e) =>
                     field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)

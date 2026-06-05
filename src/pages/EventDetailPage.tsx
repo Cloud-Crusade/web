@@ -55,7 +55,7 @@ export default function EventDetailPage() {
         {data.body && <p className="whitespace-pre-wrap leading-relaxed">{data.body}</p>}
       </div>
 
-      <ReserveAction eventId={data.event_id} />
+      <ReserveAction eventId={data.event_id} totalSeats={data.total_seats} />
     </article>
   );
 }
