@@ -43,7 +43,7 @@ API 도메인을 그대로 정보 구조(IA)에 매핑합니다. 인증이 필�
 | 화면             | 경로                           | 연동 API                                                           |
 | ---------------- | ------------------------------ | ------------------------------------------------------------------ |
 | 행사 등록        | `/events/new`                  | `POST /events`                                                     |
-| 행사 수정        | `/events/:eventId/edit`        | `PATCH /events/{event_id}`, `DELETE /events/{event_id}`            |
+| 행사 수정·삭제   | `/events/:eventId` 내 액션     | `PATCH /events/{event_id}`, `DELETE /events/{event_id}`            |
 | 예매하기         | `/events/:eventId` 내 액션     | `POST /reservations` (202 비동기)                                  |
 | 내 예매 목록     | `/reservations`                | `GET /reservations`                                                |
 | 예매 상세 · 취소 | `/reservations/:reservationId` | `GET /reservations/{id}`, `DELETE /reservations/{id}` (202 비동기) |
@@ -106,25 +106,30 @@ API 도메인을 그대로 정보 구조(IA)에 매핑합니다. 인증이 필�
 
 <br>
 
-## 디렉토리 구조 (제안)
+## 디렉토리 구조
 
 ```
 src/
-├── main.tsx                 # 엔트리, Provider 구성 (Query · Router)
-├── App.tsx                  # 라우트 정의
-├── lib/
-│   ├── apiClient.ts         # Axios 인스턴스 + 토큰 인터셉터
-│   └── queryClient.ts       # TanStack Query 설정
+├── main.tsx                 # 엔트리, Provider 구성 (Query · Auth · Router · Toaster)
+├── lib/                     # 도메인 무관 인프라
+│   ├── apiClient.ts         # Axios 인스턴스 + 토큰 주입 / 401 refresh 재시도
+│   ├── apiError.ts          # ApiError 정규화 (toApiError, 상태/코드 가드)
+│   ├── authToken.ts         # 토큰 저장 단일 모듈
+│   ├── queryClient.ts       # TanStack Query 설정 + mutation 실패 토스트
+│   ├── poll.ts              # 202 비동기 폴링 헬퍼 (pollUntil)
+│   └── utils.ts             # cn() 등 순수 헬퍼
 ├── components/
-│   └── ui/                  # shadcn/ui 컴포넌트
-├── features/                # 도메인별 모듈 (API 도메인 미러링)
-│   ├── auth/                # 로그인·회원가입·토큰
+│   ├── ui/                  # shadcn/ui 컴포넌트
+│   └── layout/              # AppLayout, Header
+├── features/                # 도메인별 모듈 (api · hooks · schema · components)
+│   ├── auth/                # 로그인·회원가입·토큰 + AuthContext
 │   ├── events/              # 행사 목록·상세·등록·수정
-│   ├── reservations/        # 예매·취소 (비동기 폴링 훅 포함)
-│   ├── payments/            # 결제·내역
+│   ├── reservations/        # 예매·취소 (202 비동기)
+│   ├── payments/            # 결제·내역 (202 비동기)
 │   └── users/               # 내 정보
-├── hooks/                   # 공통 훅
+├── routes/                  # router.tsx, ProtectedRoute
 ├── pages/                   # 라우트 단위 페이지
+├── test/                    # Vitest 셋업 + MSW 핸들러
 └── types/                   # API 응답 타입
 ```
 
