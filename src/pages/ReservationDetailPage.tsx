@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PayAction } from '@/features/payments/components/PayAction';
 import { ReservationStatusBadge } from '@/features/reservations/components/ReservationStatusBadge';
 import { useCancelReservation, useReservation } from '@/features/reservations/hooks';
 import { toApiError } from '@/lib/apiError';
@@ -74,6 +75,13 @@ export default function ReservationDetailPage() {
           }
         />
       </dl>
+
+      {!data.is_canceled && (
+        <section className="space-y-2">
+          <h2 className="text-lg font-semibold">결제</h2>
+          <PayAction reservationId={reservationId} />
+        </section>
+      )}
 
       {!data.is_canceled && (
         <AlertDialog>

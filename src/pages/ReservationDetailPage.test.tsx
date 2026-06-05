@@ -27,6 +27,12 @@ describe('ReservationDetailPage', () => {
     expect(screen.getByText('예매 완료')).toBeInTheDocument();
   });
 
+  it('취소되지 않은 예매에는 결제 액션을 보여준다', async () => {
+    renderDetail('r1');
+    expect(await screen.findByRole('button', { name: '결제하기' })).toBeInTheDocument();
+    expect(screen.getByLabelText('결제 수단')).toBeInTheDocument();
+  });
+
   it('예매 취소를 누르면 확인 다이얼로그를 보여준다', async () => {
     const user = userEvent.setup();
     renderDetail('r1');
