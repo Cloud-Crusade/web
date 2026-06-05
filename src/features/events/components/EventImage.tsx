@@ -15,6 +15,8 @@ export function EventImage({ src, alt, className }: Props) {
   if (!src || failed) {
     return (
       <div
+        role="img"
+        aria-label={alt}
         className={cn('flex aspect-video w-full items-center justify-center bg-muted', className)}
       >
         <ImageOff className="size-8 text-muted-foreground" aria-hidden />
