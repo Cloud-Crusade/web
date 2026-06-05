@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -16,7 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/AuthContext';
-import { useCreateReservation } from '@/features/reservations/hooks';
+import { reservationKeys, useCreateReservation, useOccupiedSeats } from '@/features/reservations/hooks';
 
 // reserved_num 은 좌석 번호(1..total_seats) — 개수가 아니다
 const makeReserveFormSchema = (totalSeats: number) =>
@@ -39,7 +41,10 @@ export function ReserveAction({
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const create = useCreateReservation();
+  const { data: occupiedData } = useOccupiedSeats(eventId);
+  const occupied = occupiedData?.occupied ?? [];
 
   const form = useForm<ReserveFormValues>({
     resolver: zodResolver(makeReserveFormSchema(totalSeats)),
@@ -58,6 +63,15 @@ export function ReserveAction({
   }
 
   const onSubmit = form.handleSubmit((values) => {
+    // 제출 전 점유 좌석 차단 — 백엔드 409 전에 인라인으로 안내
+    if (occupied.includes(values.reserved_num)) {
+      form.setError('reserved_num', {
+        type: 'occupied',
+        message: '이미 예매된 좌석이에요. 다른 좌석을 선택하세요.',
+      });
+      return;
+    }
+
     create.mutate(
       { event_id: eventId, reserved_num: values.reserved_num },
       {
@@ -65,6 +79,9 @@ export function ReserveAction({
           toast.success('예매 요청을 접수했어요. 처리 결과를 확인하세요.');
           navigate(`/reservations/${reservation_id}`);
         },
+        // 동시 선점(409) 등 실패 시 점유 좌석 목록을 최신화
+        onError: () =>
+          queryClient.invalidateQueries({ queryKey: reservationKeys.occupied(eventId) }),
       },
     );
   });
@@ -79,7 +96,7 @@ export function ReserveAction({
           control={form.control}
           name="reserved_num"
           render={({ field }) => (
-            <FormItem className="w-28">
+            <FormItem className="w-48">
               <FormLabel>좌석 번호</FormLabel>
               <FormControl>
                 <Input
@@ -92,6 +109,9 @@ export function ReserveAction({
                   }
                 />
               </FormControl>
+              {occupied.length > 0 && (
+                <FormDescription>이미 예매된 좌석: {occupied.join(', ')}</FormDescription>
+              )}
               <FormMessage />
             </FormItem>
           )}

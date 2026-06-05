@@ -17,6 +17,11 @@ export const reservationHandlers = [
     HttpResponse.json({ items: [reservation], total: 1, page: 1, size: 10 }),
   ),
 
+  http.get(`${BASE}/reservations/seats/occupied`, ({ request }) => {
+    const eventId = new URL(request.url).searchParams.get('event_id');
+    return HttpResponse.json({ event_id: eventId, occupied: [2, 4] });
+  }),
+
   http.get(`${BASE}/reservations/:reservationId`, ({ params }) =>
     HttpResponse.json({ ...reservation, reservation_id: params.reservationId }),
   ),
