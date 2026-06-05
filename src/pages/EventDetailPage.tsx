@@ -14,12 +14,13 @@ export default function EventDetailPage() {
   const { eventId = '' } = useParams();
   const { data, isPending, isError, error } = useEvent(eventId);
 
-  if (isPending) {
+  if (eventId && isPending) {
     return <EventDetailSkeleton />;
   }
 
-  if (isError) {
-    const notFound = toApiError(error).status === 404;
+  // eventId 누락(쿼리 비활성) · 에러 · 데이터 없음을 모두 안전하게 분기
+  if (!eventId || isError || !data) {
+    const notFound = !eventId || !data || toApiError(error).status === 404;
     return (
       <EmptyState
         title={notFound ? '존재하지 않는 행사예요' : '행사를 불러오지 못했어요'}
