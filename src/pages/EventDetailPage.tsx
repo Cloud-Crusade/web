@@ -1,15 +1,71 @@
-import { useParams } from 'react-router-dom';
+import { CalendarDays, Ticket } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
 
+import { EmptyState } from '@/components/EmptyState';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EventImage } from '@/features/events/components/EventImage';
 import { useEvent } from '@/features/events/hooks';
+import { toApiError } from '@/lib/apiError';
+import { formatDateRange } from '@/lib/format';
 
 export default function EventDetailPage() {
   const { eventId = '' } = useParams();
-  const { data } = useEvent(eventId);
+  const { data, isPending, isError, error } = useEvent(eventId);
+
+  if (eventId && isPending) {
+    return <EventDetailSkeleton />;
+  }
+
+  // eventId 누락(쿼리 비활성) · 에러 · 데이터 없음을 모두 안전하게 분기
+  if (!eventId || isError || !data) {
+    const notFound = !eventId || !data || toApiError(error).status === 404;
+    return (
+      <EmptyState
+        title={notFound ? '존재하지 않는 행사예요' : '행사를 불러오지 못했어요'}
+        action={
+          <Button asChild variant="outline">
+            <Link to="/events">행사 목록으로</Link>
+          </Button>
+        }
+      />
+    );
+  }
 
   return (
-    <section className="space-y-4">
-      <h1 className="text-2xl font-bold tracking-tight">{data?.title ?? '행사 상세'}</h1>
-      <p className="text-muted-foreground">상세 정보·예매 액션은 후속 이슈에서 구현됩니다.</p>
-    </section>
+    <article className="space-y-6">
+      <EventImage src={data.img_urls[0]} alt={data.title} className="rounded-xl" />
+
+      <div className="space-y-3">
+        <h1 className="text-2xl font-bold tracking-tight">{data.title}</h1>
+
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <CalendarDays className="size-4" aria-hidden />
+            {formatDateRange(data.schedule.start_at, data.schedule.end_at)}
+          </span>
+          <Badge variant="secondary" className="gap-1">
+            <Ticket className="size-3.5" aria-hidden />
+            전체 {data.total_seats}석
+          </Badge>
+        </div>
+
+        {data.body && <p className="whitespace-pre-wrap leading-relaxed">{data.body}</p>}
+      </div>
+    </article>
+  );
+}
+
+function EventDetailSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="aspect-video w-full rounded-xl" />
+      <div className="space-y-3">
+        <Skeleton className="h-8 w-2/3" />
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    </div>
   );
 }

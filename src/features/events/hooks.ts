@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { PageParams } from '@/types/common';
 
@@ -15,6 +15,8 @@ export function useEvents(params: PageParams) {
   return useQuery({
     queryKey: eventKeys.list(params),
     queryFn: () => eventApi.list(params),
+    // 페이지 이동 시 이전 데이터 유지로 깜빡임 방지 (09-performance)
+    placeholderData: keepPreviousData,
   });
 }
 
