@@ -25,7 +25,10 @@ export const reservationHandlers = [
     HttpResponse.json({ reservation_id: 'r-new', status: 'accepted' }, { status: 202 }),
   ),
 
-  http.delete(`${BASE}/reservations/:reservationId`, () =>
-    HttpResponse.json({ reservation_id: 'r1', status: 'accepted' }, { status: 202 }),
+  http.delete(`${BASE}/reservations/:reservationId`, ({ params }) =>
+    HttpResponse.json(
+      { reservation_id: params.reservationId, status: 'accepted' },
+      { status: 202 },
+    ),
   ),
 ];
