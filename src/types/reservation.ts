@@ -16,3 +16,8 @@ export interface ReservationRead {
 }
 
 export type ReservationPage = Page<ReservationRead>;
+
+export interface OccupiedSeats {
+  event_id: string;
+  occupied: number[];
+}

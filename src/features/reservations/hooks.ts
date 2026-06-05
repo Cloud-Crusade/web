@@ -10,7 +10,21 @@ export const reservationKeys = {
   all: ['reservations'] as const,
   list: (params: PageParams) => ['reservations', params] as const,
   detail: (reservationId: string) => ['reservation', reservationId] as const,
+  occupied: (eventId: string) => ['reservations', 'occupied', eventId] as const,
 };
+
+// 점유 좌석은 다른 사용자의 예매로 바뀜 → 짧은 staleTime 으로 최신성 확보
+const OCCUPIED_STALE_MS = 10_000;
+
+export function useOccupiedSeats(eventId: string) {
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: reservationKeys.occupied(eventId),
+    queryFn: () => reservationApi.occupiedSeats(eventId),
+    enabled: isAuthenticated && !!eventId,
+    staleTime: OCCUPIED_STALE_MS,
+  });
+}
 
 export function useMyReservations(params: PageParams) {
   const { isAuthenticated } = useAuth();
