@@ -9,7 +9,7 @@ import type { PaymentCreateInput } from './schema';
 
 // 결제는 202 비동기(SQS→Lambda) → 단건 조회가 200 으로 잡힐 때까지 폴링 (02/03/09 룰셋)
 const PAYMENT_POLL_INTERVAL_MS = 1_500;
-const PAYMENT_POLL_TIMEOUT_MS = 30_000;
+export const PAYMENT_POLL_TIMEOUT_MS = 30_000;
 
 export const paymentKeys = {
   all: ['payments'] as const,
@@ -39,6 +39,13 @@ export function usePayment(paymentHistoryId: string) {
 export function usePaymentStatus(paymentHistoryId: string | undefined) {
   const { isAuthenticated } = useAuth();
   const startedAt = useRef(Date.now());
+  const trackedId = useRef(paymentHistoryId);
+  // 결제 id 가 새로 설정되면 폴링 시작 시점으로 타임아웃 기준을 리셋
+  // (마운트 시점 고정이면, 페이지를 오래 열어둔 뒤 결제 시작 시 즉시 타임아웃됨)
+  if (paymentHistoryId !== trackedId.current) {
+    trackedId.current = paymentHistoryId;
+    startedAt.current = Date.now();
+  }
   return useQuery({
     queryKey: paymentKeys.detail(paymentHistoryId ?? ''),
     queryFn: () => paymentApi.get(paymentHistoryId!),

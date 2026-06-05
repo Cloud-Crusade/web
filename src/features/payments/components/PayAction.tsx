@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -14,7 +14,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useCreatePayment, usePaymentStatus } from '@/features/payments/hooks';
+import {
+  PAYMENT_POLL_TIMEOUT_MS,
+  useCreatePayment,
+  usePaymentStatus,
+} from '@/features/payments/hooks';
 
 // 백엔드 제약 미러: payment_method 1~20자 (mock 문자열)
 const payFormSchema = z.object({
@@ -27,13 +31,22 @@ type PayFormValues = z.infer<typeof payFormSchema>;
 
 export function PayAction({ reservationId }: { reservationId: string }) {
   const [paymentId, setPaymentId] = useState<string>();
+  const [hasTimedOut, setHasTimedOut] = useState(false);
   const create = useCreatePayment();
-  const { data: payment } = usePaymentStatus(paymentId);
+  // 타임아웃 후에는 폴링 비활성화 (undefined → enabled=false)
+  const { data: payment } = usePaymentStatus(hasTimedOut ? undefined : paymentId);
 
   const form = useForm<PayFormValues>({
     resolver: zodResolver(payFormSchema),
     defaultValues: { payment_method: '' },
   });
+
+  // 결제 접수 후 일정 시간 내 반영 안 되면 타임아웃 처리 (무한 '처리 중' 방지)
+  useEffect(() => {
+    if (paymentId == null || payment != null || hasTimedOut) return;
+    const timer = setTimeout(() => setHasTimedOut(true), PAYMENT_POLL_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [paymentId, payment, hasTimedOut]);
 
   // 폴링으로 결제 기록이 잡힘 → 완료
   if (payment) {
@@ -48,9 +61,29 @@ export function PayAction({ reservationId }: { reservationId: string }) {
     );
   }
 
+  const retry = () => {
+    setHasTimedOut(false);
+    setPaymentId(undefined);
+    form.reset();
+  };
+
+  // 타임아웃 — 실패 단정 금지(비동기라 나중에 반영될 수 있음). 안내 + 재시도 (04 룰셋)
+  if (hasTimedOut) {
+    return (
+      <div className="space-y-2 rounded-lg border border-border p-4" aria-live="polite">
+        <p className="text-sm font-medium">결제 확인이 지연되고 있어요.</p>
+        <p className="text-sm text-muted-foreground">
+          잠시 후 결제 내역에서 확인하거나 다시 시도해 주세요.
+        </p>
+        <Button variant="outline" onClick={retry}>
+          다시 시도
+        </Button>
+      </div>
+    );
+  }
+
   // 202 접수 후 폴링 중(또는 제출 중) — 중복 제출 차단
-  const isProcessing = create.isPending || paymentId != null;
-  if (isProcessing) {
+  if (create.isPending || paymentId != null) {
     return (
       <div className="space-y-1 rounded-lg border border-border p-4" aria-live="polite">
         <p className="flex items-center gap-2 text-sm font-medium">
