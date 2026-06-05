@@ -1,7 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 
-import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '@/lib/authToken';
 import { toApiError } from '@/lib/apiError';
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '@/lib/authToken';
 import type { TokenPair } from '@/types/auth';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8020';

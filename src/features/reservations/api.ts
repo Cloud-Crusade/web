@@ -1,10 +1,6 @@
 import { apiClient } from '@/lib/apiClient';
 import type { PageParams } from '@/types/common';
-import type {
-  ReservationAccepted,
-  ReservationPage,
-  ReservationRead,
-} from '@/types/reservation';
+import type { ReservationAccepted, ReservationPage, ReservationRead } from '@/types/reservation';
 
 import type { ReservationCreateInput } from './schema';
 
