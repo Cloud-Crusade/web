@@ -2,6 +2,7 @@ import { CalendarOff, Plus } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { EmptyState } from '@/components/EmptyState';
+import { Pagination } from '@/components/Pagination';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -94,39 +95,6 @@ function EventGridSkeleton() {
           <Skeleton className="h-4 w-1/2" />
         </div>
       ))}
-    </div>
-  );
-}
-
-interface PaginationProps {
-  page: number;
-  size: number;
-  total: number;
-  disableNext: boolean;
-  onChange: (next: number) => void;
-}
-
-function Pagination({ page, size, total, disableNext, onChange }: PaginationProps) {
-  const lastPage = Math.max(1, Math.ceil(total / size));
-  if (lastPage <= 1) {
-    return null;
-  }
-  return (
-    <div className="flex items-center justify-center gap-4">
-      <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onChange(page - 1)}>
-        이전
-      </Button>
-      <span className="text-sm text-muted-foreground">
-        {page} / {lastPage}
-      </span>
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={disableNext || page >= lastPage}
-        onClick={() => onChange(page + 1)}
-      >
-        다음
-      </Button>
     </div>
   );
 }

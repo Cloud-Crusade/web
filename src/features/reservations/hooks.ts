@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/features/auth/AuthContext';
 import type { PageParams } from '@/types/common';
@@ -18,6 +18,7 @@ export function useMyReservations(params: PageParams) {
     queryKey: reservationKeys.list(params),
     queryFn: () => reservationApi.list(params),
     enabled: isAuthenticated,
+    placeholderData: keepPreviousData,
   });
 }
 

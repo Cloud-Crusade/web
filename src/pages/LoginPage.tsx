@@ -36,7 +36,7 @@ export default function LoginPage() {
   // 검색 파라미터·해시까지 보존해 원래 URL 그대로 복귀 (예: /events?page=2)
   const from = (location.state as FromState | null)?.from;
   const redirectTo = from
-    ? `${from.pathname}${from.search}${from.hash}`
+    ? `${from.pathname}${from.search ?? ''}${from.hash ?? ''}`
     : (searchParams.get('redirect') ?? '/events');
 
   const onSubmit = form.handleSubmit((values) => {
