@@ -2,6 +2,7 @@ import axios, { type InternalAxiosRequestConfig } from 'axios';
 
 import { toApiError } from '@/lib/apiError';
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '@/lib/authToken';
+import { clearReservationToken, getReservationToken } from '@/lib/reservationToken';
 import type { TokenPair } from '@/types/auth';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8020';
@@ -13,11 +14,15 @@ export const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// 요청 인터셉터 — access token 자동 주입
+// 요청 인터셉터 — access token + 대기열 입장 토큰(RESERVATION) 자동 주입
 apiClient.interceptors.request.use((config) => {
   const token = getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  const reservationToken = getReservationToken();
+  if (reservationToken) {
+    config.headers.RESERVATION = reservationToken;
   }
   return config;
 });
@@ -42,6 +47,7 @@ async function requestRefresh(): Promise<TokenPair> {
 
 function redirectToLogin(): void {
   clearTokens();
+  clearReservationToken();
   const redirect = encodeURIComponent(window.location.pathname + window.location.search);
   window.location.assign(`/login?redirect=${redirect}`);
 }
