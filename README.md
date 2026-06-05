@@ -40,16 +40,16 @@ API 도메인을 그대로 정보 구조(IA)에 매핑합니다. 인증이 필�
 
 ### 인증 영역 🔒
 
-| 화면             | 경로                              | 연동 API                                                           |
-| ---------------- | --------------------------------- | ------------------------------------------------------------------ |
-| 행사 등록        | `/events/new`                     | `POST /events`                                                     |
-| 행사 수정        | `/events/:eventId/edit`           | `PATCH /events/{event_id}`, `DELETE /events/{event_id}`            |
-| 예매하기         | `/events/:eventId` 내 액션        | `POST /reservations` (202 비동기)                                  |
-| 내 예매 목록     | `/me/reservations`                | `GET /reservations`                                                |
-| 예매 상세 · 취소 | `/me/reservations/:reservationId` | `GET /reservations/{id}`, `DELETE /reservations/{id}` (202 비동기) |
-| 결제하기         | 예매 상세 내 액션                 | `POST /payments` (202 비동기)                                      |
-| 내 결제 내역     | `/me/payments`                    | `GET /payments`, `GET /payments/{id}`                              |
-| 내 정보          | `/me`                             | `GET /users/me`                                                    |
+| 화면             | 경로                           | 연동 API                                                           |
+| ---------------- | ------------------------------ | ------------------------------------------------------------------ |
+| 행사 등록        | `/events/new`                  | `POST /events`                                                     |
+| 행사 수정        | `/events/:eventId/edit`        | `PATCH /events/{event_id}`, `DELETE /events/{event_id}`            |
+| 예매하기         | `/events/:eventId` 내 액션     | `POST /reservations` (202 비동기)                                  |
+| 내 예매 목록     | `/reservations`                | `GET /reservations`                                                |
+| 예매 상세 · 취소 | `/reservations/:reservationId` | `GET /reservations/{id}`, `DELETE /reservations/{id}` (202 비동기) |
+| 결제하기         | 예매 상세 내 액션              | `POST /payments` (202 비동기)                                      |
+| 내 결제 내역     | `/payments`                    | `GET /payments`, `GET /payments/{id}`                              |
+| 내 정보          | `/me`                          | `GET /users/me`                                                    |
 
 > 행사 등록·수정·삭제는 로그인 사용자라면 누구나 가능합니다(백엔드에 관리자 역할 구분이 없음). 권한 분리는 API 범위 밖이므로 화면에서도 도입하지 않습니다.
 
