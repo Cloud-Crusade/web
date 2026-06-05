@@ -40,12 +40,12 @@ function useFormField() {
   const itemContext = React.useContext(FormItemContext);
   const { getFieldState, formState } = useFormContext();
 
-  const fieldState = getFieldState(fieldContext.name, formState);
-
-  if (!fieldContext) {
+  // 컨텍스트 검증을 getFieldState 호출보다 먼저 — Provider 밖 사용을 명확히 차단
+  if (!fieldContext?.name) {
     throw new Error('useFormField 는 <FormField> 안에서만 사용할 수 있습니다');
   }
 
+  const fieldState = getFieldState(fieldContext.name, formState);
   const { id } = itemContext;
 
   return {
