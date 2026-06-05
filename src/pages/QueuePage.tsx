@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 
 import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
-import { useQueueStatus } from '@/features/queue/hooks';
+import { isQueueCompleted, useQueueStatus } from '@/features/queue/hooks';
 
 export default function QueuePage() {
   const { eventId = '' } = useParams();
@@ -13,8 +13,8 @@ export default function QueuePage() {
     return <Navigate to="/events" replace />;
   }
 
-  // 입장 완료 → 예매 화면(이벤트 상세)으로 복귀
-  if (data?.status === 'admitted') {
+  // 입장 완료(COMPLETED) → 토큰은 useQueueStatus 가 저장, 예매 화면(이벤트 상세)으로 복귀
+  if (isQueueCompleted(data)) {
     return <Navigate to={`/events/${eventId}`} replace />;
   }
 
@@ -35,13 +35,13 @@ export default function QueuePage() {
     <section className="flex flex-col items-center gap-4 py-16 text-center" aria-live="polite">
       <Loader2 className="size-10 animate-spin text-primary" aria-hidden />
       <h1 className="text-2xl font-bold tracking-tight">예매 대기 중이에요</h1>
-      {data ? (
+      {data?.data?.position != null ? (
         <p className="text-muted-foreground">
-          내 순번 <span className="font-semibold text-foreground">{data.position}</span>번 — 곧
-          입장돼요.
+          내 순번 <span className="font-semibold text-foreground">{data.data.position}</span>번 —
+          곧 입장돼요.
         </p>
       ) : (
-        <p className="text-muted-foreground">대기열 정보를 확인하고 있어요...</p>
+        <p className="text-muted-foreground">{data?.message ?? '대기열 정보를 확인하고 있어요...'}</p>
       )}
       <p className="text-sm text-muted-foreground">
         이 페이지를 벗어나지 마세요. 순서가 되면 자동으로 입장됩니다.

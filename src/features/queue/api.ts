@@ -1,11 +1,11 @@
 import { apiClient } from '@/lib/apiClient';
-import type { QueueStatus } from '@/types/queue';
+import type { QueueResponse } from '@/types/queue';
 
 const BASE = '/queue';
 
 export const queueApi = {
-  async getStatus(eventId: string): Promise<QueueStatus> {
-    const { data } = await apiClient.get<QueueStatus>(`${BASE}/${eventId}`);
+  async getStatus(eventId: string): Promise<QueueResponse> {
+    const { data } = await apiClient.get<QueueResponse>(`${BASE}/${eventId}`);
     return data;
   },
 };

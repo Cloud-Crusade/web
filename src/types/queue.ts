@@ -1,5 +1,10 @@
-export interface QueueStatus {
-  event_id: string;
-  position: number;
-  status: 'waiting' | 'admitted';
+// 대기열 순번 조회 응답 — 표준 { code, message, data } 엔벨로프.
+// 입장 완료 시 code === 'COMPLETED' + data.token(예매 입장 토큰).
+export interface QueueResponse {
+  code: string;
+  message: string;
+  data?: {
+    token?: string;
+    position?: number;
+  };
 }
