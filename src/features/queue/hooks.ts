@@ -26,8 +26,11 @@ export function useQueueStatus(eventId: string) {
     queryFn: () => queueApi.getStatus(eventId),
     enabled: isAuthenticated && !!eventId,
     staleTime: 0,
-    refetchInterval: (q) =>
-      q.state.data?.code === QUEUE_COMPLETED ? false : QUEUE_POLL_INTERVAL_MS,
+    refetchInterval: (q) => {
+      // 에러(네트워크/401/500) 시 폴링 중단 — 재시도 스팸 방지(QueuePage 가 에러 UI 노출)
+      if (q.state.status === 'error') return false;
+      return q.state.data?.code === QUEUE_COMPLETED ? false : QUEUE_POLL_INTERVAL_MS;
+    },
   });
 
   // 입장 완료 시 발급된 토큰을 저장 → 이후 요청의 RESERVATION 헤더로 주입(apiClient)

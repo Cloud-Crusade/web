@@ -31,7 +31,6 @@ export const router = createBrowserRouter([
       { path: 'login', element: withSuspense(<LoginPage />) },
       { path: 'signup', element: withSuspense(<SignupPage />) },
       { path: 'events', element: withSuspense(<EventListPage />) },
-      { path: 'queue/:eventId', element: withSuspense(<QueuePage />) },
       {
         // 예매 진입(이벤트 상세)을 대기 게이트로 감쌈 — 미입장 시 대기열로 보냄
         element: <QueueGate />,
@@ -40,6 +39,8 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
+          // 대기열은 인증 필요(큐 엔드포인트 인증 필수) → 보호 라우트 아래
+          { path: 'queue/:eventId', element: withSuspense(<QueuePage />) },
           { path: 'events/new', element: withSuspense(<EventCreatePage />) },
           { path: 'reservations', element: withSuspense(<MyReservationsPage />) },
           { path: 'reservations/:reservationId', element: withSuspense(<ReservationDetailPage />) },
