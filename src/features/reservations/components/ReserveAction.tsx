@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -32,6 +32,7 @@ type ReserveFormValues = z.infer<typeof reserveFormSchema>;
 export function ReserveAction({ eventId }: { eventId: string }) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const create = useCreateReservation();
 
   const form = useForm<ReserveFormValues>({
@@ -43,11 +44,7 @@ export function ReserveAction({ eventId }: { eventId: string }) {
     return (
       <div className="rounded-lg border border-border p-4">
         <p className="mb-3 text-sm text-muted-foreground">예매하려면 로그인이 필요해요.</p>
-        <Button
-          onClick={() =>
-            navigate('/login', { state: { from: { pathname: `/events/${eventId}` } } })
-          }
-        >
+        <Button onClick={() => navigate('/login', { state: { from: location } })}>
           로그인하고 예매하기
         </Button>
       </div>
