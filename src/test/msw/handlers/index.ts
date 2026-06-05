@@ -1,3 +1,4 @@
+import { authHandlers } from './auth';
 import { eventHandlers } from './events';
 
-export const handlers = [...eventHandlers];
+export const handlers = [...authHandlers, ...eventHandlers];

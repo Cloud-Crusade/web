@@ -46,6 +46,10 @@ function redirectToLogin(): void {
   window.location.assign(`/login?redirect=${redirect}`);
 }
 
+// 인증 엔드포인트의 401 은 refresh 대상이 아니다 — 잘못된 자격 증명은 폼 에러로 노출한다
+const AUTH_PATHS = ['/auth/login', '/auth/signup', '/auth/refresh'];
+const isAuthPath = (url?: string) => !!url && AUTH_PATHS.some((path) => url.includes(path));
+
 // 응답 인터셉터 — 401 → refresh → 재시도, 그 외 에러는 ApiError 로 정규화
 apiClient.interceptors.response.use(
   (response) => response,
@@ -53,7 +57,7 @@ apiClient.interceptors.response.use(
     const config = error.config as RetriableConfig | undefined;
     const status = error.response?.status;
 
-    if (status !== 401 || !config || config._retried) {
+    if (status !== 401 || !config || config._retried || isAuthPath(config.url)) {
       return Promise.reject(toApiError(error));
     }
     config._retried = true;
