@@ -12,7 +12,7 @@ export function ReservationCard({ reservation }: { reservation: ReservationRead 
       to={`/reservations/${reservation.reservation_id}`}
       className="block rounded-xl focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
     >
-      <Card className="transition-colors hover:bg-accent">
+      <Card className="transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
         <CardContent className="flex items-center justify-between gap-4 p-4">
           <div className="space-y-1">
             <p className="font-medium">좌석 {reservation.reserved_num}번</p>

@@ -67,3 +67,14 @@
     @apply bg-primary/20;
   }
 }
+
+/* 모션 축소 설정 존중 — 페이드인·호버 트랜지션 등 비활성화 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
