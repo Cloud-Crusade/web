@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import defaultTheme from 'tailwindcss/defaultTheme';
 import tailwindcssAnimate from 'tailwindcss-animate';
 
 export default {
@@ -13,6 +14,21 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Pretendard Variable', 'Pretendard', ...defaultTheme.fontFamily.sans],
+      },
+      boxShadow: {
+        soft: '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.06)',
+      },
+      keyframes: {
+        'fade-in': {
+          from: { opacity: '0', transform: 'translateY(4px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fade-in 0.25s ease-out',
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

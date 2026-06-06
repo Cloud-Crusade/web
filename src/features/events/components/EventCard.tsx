@@ -13,7 +13,7 @@ export function EventCard({ event }: { event: EventRead }) {
       to={`/events/${event.event_id}`}
       className="block rounded-xl focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
     >
-      <Card className="h-full overflow-hidden transition-colors hover:bg-accent">
+      <Card className="h-full overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
         <EventImage src={event.img_urls[0]} alt={event.title} />
         <CardContent className="space-y-2 p-4">
           <h2 className="line-clamp-1 font-semibold">{event.title}</h2>
