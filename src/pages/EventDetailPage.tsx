@@ -5,6 +5,8 @@ import { EmptyState } from '@/components/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/features/auth/AuthContext';
+import { EventActions } from '@/features/events/components/EventActions';
 import { EventImage } from '@/features/events/components/EventImage';
 import { useEvent } from '@/features/events/hooks';
 import { ReserveAction } from '@/features/reservations/components/ReserveAction';
@@ -13,6 +15,7 @@ import { formatDateRange } from '@/lib/format';
 
 export default function EventDetailPage() {
   const { eventId = '' } = useParams();
+  const { isAuthenticated } = useAuth();
   const { data, isPending, isError, error } = useEvent(eventId);
 
   if (eventId && isPending) {
@@ -54,6 +57,8 @@ export default function EventDetailPage() {
 
         {data.body && <p className="whitespace-pre-wrap leading-relaxed">{data.body}</p>}
       </div>
+
+      {isAuthenticated && <EventActions eventId={data.event_id} />}
 
       <ReserveAction eventId={data.event_id} totalSeats={data.total_seats} />
     </article>
