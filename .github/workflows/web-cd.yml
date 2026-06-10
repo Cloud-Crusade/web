@@ -55,4 +55,29 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: deploy to s3
-        run: aws s3 sync dist/ s3://${{ vars.S3_BUCKET_NAME }} --delete
+        env:
+          BUCKET: ${{ vars.S3_BUCKET_NAME }}
+        run: |
+          : "${BUCKET:?S3_BUCKET_NAME variable is not set}"
+          aws s3 sync dist/ "s3://$BUCKET" \
+            --exclude index.html \
+            --cache-control "public,max-age=31536000,immutable"
+          aws s3 cp dist/index.html "s3://$BUCKET/index.html" \
+            --cache-control "no-cache"
+
+      - name: invalidate cloudfront
+        env:
+          BUCKET: ${{ vars.S3_BUCKET_NAME }}
+          REGION: ap-northeast-2
+        run: |
+          ORIGIN="$BUCKET.s3.$REGION.amazonaws.com"
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?contains(Origins.Items[].DomainName, '$ORIGIN')].Id | [0]" \
+            --output text)
+          if [ -z "$DISTRIBUTION_ID" ] || [ "$DISTRIBUTION_ID" = "None" ]; then
+            echo "::warning::CloudFront distribution not found for origin $ORIGIN — skipping invalidation"
+            exit 0
+          fi
+          aws cloudfront create-invalidation \
+            --distribution-id "$DISTRIBUTION_ID" \
+            --paths "/index.html" "/"
