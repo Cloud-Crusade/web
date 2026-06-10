@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/features/auth/AuthContext';
+import { solveCaptchaToken } from '@/lib/captcha';
 import type { PageParams } from '@/types/common';
 
 import { reservationApi } from './api';
@@ -48,7 +49,11 @@ export function useReservation(reservationId: string) {
 export function useCreateReservation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: ReservationCreateInput) => reservationApi.create(input),
+    // 캡차 활성 시 PoW 토큰을 먼저 풀어 함께 전송 (off 면 undefined → 기존 흐름)
+    mutationFn: async (input: ReservationCreateInput) => {
+      const captchaToken = await solveCaptchaToken();
+      return reservationApi.create(input, captchaToken);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: reservationKeys.all }),
   });
 }

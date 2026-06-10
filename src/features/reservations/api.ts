@@ -30,8 +30,14 @@ export const reservationApi = {
   },
 
   // 202 Accepted — 비동기 write (SQS→Lambda). 반영 확인은 단건 조회 폴링으로 (02 룰셋)
-  async create(payload: ReservationCreateInput): Promise<ReservationAccepted> {
-    const { data } = await apiClient.post<ReservationAccepted>(BASE, payload);
+  // captchaToken: 캡차 활성 시 ALTCHA PoW 토큰(X-Captcha-Token 헤더)
+  async create(
+    payload: ReservationCreateInput,
+    captchaToken?: string,
+  ): Promise<ReservationAccepted> {
+    const { data } = await apiClient.post<ReservationAccepted>(BASE, payload, {
+      headers: captchaToken ? { 'X-Captcha-Token': captchaToken } : undefined,
+    });
     return data;
   },
 
