@@ -46,4 +46,38 @@ describe('solveCaptchaToken', () => {
     expect(decoded.challenge).toBe(challenge);
     expect(decoded.signature).toBe('server-sig');
   });
+
+  it('PoW 를 풀 수 없으면 무효 토큰 대신 에러를 throw 한다', async () => {
+    vi.stubEnv('VITE_CAPTCHA_ENABLED', 'true');
+    server.use(
+      http.get(`${BASE}/captcha/challenge`, () =>
+        HttpResponse.json({
+          algorithm: 'SHA-256',
+          challenge: 'f'.repeat(64), // 범위 내 어떤 number 로도 안 나오는 해시
+          maxnumber: 20,
+          salt: 'no-solution',
+          signature: 'sig',
+        }),
+      ),
+    );
+
+    await expect(solveCaptchaToken()).rejects.toMatchObject({ code: 'CAPTCHA_SOLVE_FAILED' });
+  });
+
+  it('지원하지 않는 알고리즘이면 에러를 throw 한다', async () => {
+    vi.stubEnv('VITE_CAPTCHA_ENABLED', 'true');
+    server.use(
+      http.get(`${BASE}/captcha/challenge`, () =>
+        HttpResponse.json({
+          algorithm: 'MD5',
+          challenge: 'x',
+          maxnumber: 1,
+          salt: 's',
+          signature: 'sig',
+        }),
+      ),
+    );
+
+    await expect(solveCaptchaToken()).rejects.toMatchObject({ code: 'CAPTCHA_UNSUPPORTED' });
+  });
 });
