@@ -29,6 +29,18 @@ jobs:
       - name: install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: validate env vars
+        env:
+          VITE_CAPTCHA_ENABLED: ${{ vars.VITE_CAPTCHA_ENABLED }}
+        run: |
+          case "$VITE_CAPTCHA_ENABLED" in
+            true | false) ;;
+            *)
+              echo "::error::VITE_CAPTCHA_ENABLED must be 'true' or 'false' (got '$VITE_CAPTCHA_ENABLED')"
+              exit 1
+              ;;
+          esac
+
       - name: build
         run: pnpm build
         env:
