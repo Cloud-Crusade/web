@@ -10,6 +10,7 @@ const SignupPage = lazy(() => import('@/pages/SignupPage'));
 const EventListPage = lazy(() => import('@/pages/EventListPage'));
 const EventDetailPage = lazy(() => import('@/pages/EventDetailPage'));
 const EventCreatePage = lazy(() => import('@/pages/EventCreatePage'));
+const EventEditPage = lazy(() => import('@/pages/EventEditPage'));
 const MyReservationsPage = lazy(() => import('@/pages/MyReservationsPage'));
 const ReservationDetailPage = lazy(() => import('@/pages/ReservationDetailPage'));
 const MyPaymentsPage = lazy(() => import('@/pages/MyPaymentsPage'));
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
           // 대기열은 인증 필요(큐 엔드포인트 인증 필수) → 보호 라우트 아래
           { path: 'queue/:eventId', element: withSuspense(<QueuePage />) },
           { path: 'events/new', element: withSuspense(<EventCreatePage />) },
+          { path: 'events/:eventId/edit', element: withSuspense(<EventEditPage />) },
           { path: 'reservations', element: withSuspense(<MyReservationsPage />) },
           { path: 'reservations/:reservationId', element: withSuspense(<ReservationDetailPage />) },
           { path: 'payments', element: withSuspense(<MyPaymentsPage />) },
