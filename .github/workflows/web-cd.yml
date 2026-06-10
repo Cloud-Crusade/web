@@ -58,15 +58,26 @@ jobs:
         env:
           BUCKET: ${{ vars.S3_BUCKET_NAME }}
         run: |
+          : "${BUCKET:?S3_BUCKET_NAME variable is not set}"
           aws s3 sync dist/ "s3://$BUCKET" \
             --exclude index.html \
             --cache-control "public,max-age=31536000,immutable"
           aws s3 cp dist/index.html "s3://$BUCKET/index.html" \
             --cache-control "no-cache"
 
-      # 새 index.html 이 즉시 서빙되도록 무효화(자산은 해시 파일명이라 무효화 불필요)
       - name: invalidate cloudfront
+        env:
+          BUCKET: ${{ vars.S3_BUCKET_NAME }}
+          REGION: ap-northeast-2
         run: |
+          ORIGIN="$BUCKET.s3.$REGION.amazonaws.com"
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?contains(Origins.Items[].DomainName, '$ORIGIN')].Id | [0]" \
+            --output text)
+          if [ -z "$DISTRIBUTION_ID" ] || [ "$DISTRIBUTION_ID" = "None" ]; then
+            echo "::error::No CloudFront distribution found for origin $ORIGIN"
+            exit 1
+          fi
           aws cloudfront create-invalidation \
-            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --distribution-id "$DISTRIBUTION_ID" \
             --paths "/index.html" "/"
