@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { EventRead } from '@/types/event';
 
-import { type EventFormValues, toEventFormValues, toEventPayload } from './schema';
+import { eventFormSchema, type EventFormValues, toEventFormValues, toEventPayload } from './schema';
 
 const baseValues: EventFormValues = {
   title: '콘서트',
@@ -27,6 +27,13 @@ describe('toEventPayload', () => {
     const payload = toEventPayload({ ...baseValues, img_url: '', body: '   ' });
     expect(payload.img_urls).toEqual([]);
     expect(payload.body).toBeUndefined();
+  });
+});
+
+describe('eventFormSchema', () => {
+  it('파싱 불가능한 시작 시각은 검증에 실패한다(Invalid Date 크래시 방지)', () => {
+    const result = eventFormSchema.safeParse({ ...baseValues, start_at: '오늘오후' });
+    expect(result.success).toBe(false);
   });
 });
 

@@ -38,8 +38,14 @@ export const eventFormSchema = z
   .object({
     title: z.string().min(1, '제목을 입력하세요').max(20, '제목은 최대 20자입니다'),
     body: z.string().optional(),
-    start_at: z.string().min(1, '시작 시각을 입력하세요'),
-    end_at: z.string().min(1, '종료 시각을 입력하세요'),
+    start_at: z
+      .string()
+      .min(1, '시작 시각을 입력하세요')
+      .refine((s) => !Number.isNaN(Date.parse(s)), '시작 시각이 올바르지 않습니다'),
+    end_at: z
+      .string()
+      .min(1, '종료 시각을 입력하세요')
+      .refine((s) => !Number.isNaN(Date.parse(s)), '종료 시각이 올바르지 않습니다'),
     img_url: z.union([z.literal(''), z.string().url('올바른 URL 이 아닙니다')]).optional(),
     total_seats: z
       .number({ message: '좌석 수를 입력하세요' })

@@ -62,6 +62,7 @@ export function EventActions({ eventId }: { eventId: string }) {
             <AlertDialogCancel>닫기</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDelete}
+              disabled={deleteEvent.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               삭제
