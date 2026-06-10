@@ -75,8 +75,8 @@ jobs:
             --query "DistributionList.Items[?contains(Origins.Items[].DomainName, '$ORIGIN')].Id | [0]" \
             --output text)
           if [ -z "$DISTRIBUTION_ID" ] || [ "$DISTRIBUTION_ID" = "None" ]; then
-            echo "::error::No CloudFront distribution found for origin $ORIGIN"
-            exit 1
+            echo "::warning::CloudFront distribution not found for origin $ORIGIN — skipping invalidation"
+            exit 0
           fi
           aws cloudfront create-invalidation \
             --distribution-id "$DISTRIBUTION_ID" \
