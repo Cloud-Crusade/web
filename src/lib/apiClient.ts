@@ -45,11 +45,12 @@ async function requestRefresh(): Promise<TokenPair> {
   return data;
 }
 
-function redirectToLogin(): void {
+// 갱신 실패 = 더 이상 유효한 세션이 아님 → 토큰을 비우고 현재 페이지를 새로고침해
+// 로그인 상태를 내린다. 보호 라우트는 새로고침 후 가드가 로그인으로 보낸다.
+function clearAuthAndReload(): void {
   clearTokens();
   clearReservationToken();
-  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
-  window.location.assign(`/login?redirect=${redirect}`);
+  window.location.reload();
 }
 
 // 인증 엔드포인트의 401 은 refresh 대상이 아니다 — 잘못된 자격 증명은 폼 에러로 노출한다
@@ -68,13 +69,18 @@ apiClient.interceptors.response.use(
     }
     config._retried = true;
 
+    // 리프레시 토큰이 없으면(비로그인) 갱신·새로고침 없이 그대로 실패 — 새로고침 루프 방지
+    if (!getRefreshToken()) {
+      return Promise.reject(toApiError(error));
+    }
+
     try {
       refreshPromise ??= requestRefresh();
       const tokens = await refreshPromise;
       config.headers.Authorization = `Bearer ${tokens.access_token}`;
       return apiClient(config);
     } catch (refreshError) {
-      redirectToLogin();
+      clearAuthAndReload();
       return Promise.reject(toApiError(refreshError));
     } finally {
       refreshPromise = null;
