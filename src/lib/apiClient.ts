@@ -2,6 +2,7 @@ import axios, { type InternalAxiosRequestConfig } from 'axios';
 
 import { toApiError } from '@/lib/apiError';
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '@/lib/authToken';
+import { queryClient } from '@/lib/queryClient';
 import { clearReservationToken, getReservationToken } from '@/lib/reservationToken';
 import type { TokenPair } from '@/types/auth';
 
@@ -63,6 +64,14 @@ apiClient.interceptors.response.use(
   async (error) => {
     const config = error.config as RetriableConfig | undefined;
     const status = error.response?.status;
+
+    // 403 = authorizer 가 입장 토큰을 거부(만료·무효). RESERVATION 헤더를 실어 보낸 요청만
+    // 토큰을 비우고 대기열 상태를 무효화 → 게이트가 재대기열(또는 재입장)로 처리한다.
+    if (status === 403 && config?.headers?.RESERVATION) {
+      clearReservationToken();
+      void queryClient.invalidateQueries({ queryKey: ['queue'] });
+      return Promise.reject(toApiError(error));
+    }
 
     if (status !== 401 || !config || config._retried || isAuthPath(config.url)) {
       return Promise.reject(toApiError(error));
