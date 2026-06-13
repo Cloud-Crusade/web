@@ -13,5 +13,6 @@ afterEach(() => {
   cleanup();
   server.resetHandlers();
   vi.unstubAllEnvs(); // env 스텁(vi.stubEnv)이 다음 테스트로 새지 않도록 전역 정리
+  localStorage.clear(); // 토큰 등 localStorage 상태가 다음 테스트로 새지 않도록 전역 정리
 });
 afterAll(() => server.close());
