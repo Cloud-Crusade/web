@@ -7,9 +7,10 @@ function readExpSeconds(token: string): number | null {
   const payload = token.split('.')[1];
   if (!payload) return null;
   try {
-    const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as {
-      exp?: unknown;
-    };
+    // base64url → base64 + atob 가 요구하는 '=' padding 복원(길이 4의 배수가 아닌 payload 디코딩 실패 방지)
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    const json = JSON.parse(atob(padded)) as { exp?: unknown };
     return typeof json.exp === 'number' ? json.exp : null;
   } catch {
     return null;
@@ -20,8 +21,8 @@ export function getReservationToken(): string | null {
   const token = localStorage.getItem(RESERVATION_KEY);
   if (!token) return null;
   const exp = readExpSeconds(token);
-  // exp 없음(손상/구버전) 또는 만료 → 정리하고 없는 것으로 취급(만료 토큰을 서버로 보내지 않는다)
-  if (exp === null || exp * 1000 <= Date.now()) {
+  // exp 가 있고 과거인 경우에만 정리 — exp 없음/파싱불가는 만료로 단정하지 않고 서버(authorizer)가 판정
+  if (exp !== null && exp * 1000 <= Date.now()) {
     localStorage.removeItem(RESERVATION_KEY);
     return null;
   }

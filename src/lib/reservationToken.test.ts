@@ -28,18 +28,32 @@ describe('getReservationToken', () => {
     expect(localStorage.getItem('cc.reservation')).toBeNull();
   });
 
-  it('exp 가 없는 토큰은 정리하고 null 을 반환한다', () => {
-    setReservationToken(makeToken({ user_id: 'u1' }));
+  it('padding 이 필요한 payload(여러 claim)의 만료 토큰도 정리한다', () => {
+    // base64url payload 길이가 4의 배수가 아니어도 디코딩되어 exp 가 읽혀야 함
+    const token = makeToken({
+      user_id: 'u1',
+      event_id: 'e1',
+      aud: 'reservation_waiting',
+      iat: Math.floor(Date.now() / 1000) - 700,
+      exp: Math.floor(Date.now() / 1000) - 1,
+    });
+    setReservationToken(token);
 
     expect(getReservationToken()).toBeNull();
     expect(localStorage.getItem('cc.reservation')).toBeNull();
   });
 
-  it('JWT 형식이 아닌 값은 정리하고 null 을 반환한다', () => {
+  it('exp 가 없는 토큰은 만료로 단정하지 않고 그대로 반환한다(서버가 판정)', () => {
+    const token = makeToken({ user_id: 'u1' });
+    setReservationToken(token);
+
+    expect(getReservationToken()).toBe(token);
+  });
+
+  it('JWT 형식이 아닌 값도 그대로 반환한다(서버가 거부 시 반응형 정리)', () => {
     setReservationToken('not-a-jwt');
 
-    expect(getReservationToken()).toBeNull();
-    expect(localStorage.getItem('cc.reservation')).toBeNull();
+    expect(getReservationToken()).toBe('not-a-jwt');
   });
 
   it('토큰이 없으면 null 을 반환한다', () => {
