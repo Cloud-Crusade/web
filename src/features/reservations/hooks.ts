@@ -1,11 +1,16 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/features/auth/AuthContext';
+import { useSettlementQuery } from '@/hooks/useSettlementQuery';
 import { solveCaptchaToken } from '@/lib/captcha';
 import type { PageParams } from '@/types/common';
 
 import { reservationApi } from './api';
 import type { ReservationCreateInput } from './schema';
+
+// 예매도 202 비동기 → 단건이 200 으로 잡힐 때까지 폴링 (결제와 동일 정착 모델)
+const RESERVATION_POLL_INTERVAL_MS = 1_500;
+export const RESERVATION_POLL_TIMEOUT_MS = 30_000;
 
 export const reservationKeys = {
   all: ['reservations'] as const,
@@ -37,12 +42,16 @@ export function useMyReservations(params: PageParams) {
   });
 }
 
-export function useReservation(reservationId: string) {
+// 예매 생성(202) 직후 단건 반영을 폴링으로 확인 — 정착(200) 또는 타임아웃까지.
+export function useReservationStatus(reservationId: string | undefined) {
   const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: reservationKeys.detail(reservationId),
-    queryFn: () => reservationApi.get(reservationId),
+  return useSettlementQuery({
+    queryKey: reservationKeys.detail(reservationId ?? ''),
+    queryFn: () => reservationApi.get(reservationId!),
+    resetKey: reservationId,
     enabled: isAuthenticated && !!reservationId,
+    intervalMs: RESERVATION_POLL_INTERVAL_MS,
+    timeoutMs: RESERVATION_POLL_TIMEOUT_MS,
   });
 }
 
