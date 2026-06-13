@@ -1,8 +1,20 @@
-import { Outlet } from 'react-router-dom';
+import { useLayoutEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+
+import { useAuth } from '@/features/auth/AuthContext';
 
 import { Header } from './Header';
 
 export function AppLayout() {
+  const { pathname } = useLocation();
+  const { syncAuth } = useAuth();
+
+  // 페이지 이동마다 토큰 저장소 기준으로 로그인 상태를 다시 확인.
+  // paint 전에 끝내 보호 라우트/헤더가 stale 상태로 한 프레임 노출되는 깜빡임을 막는다.
+  useLayoutEffect(() => {
+    syncAuth();
+  }, [pathname, syncAuth]);
+
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
       <Header />
