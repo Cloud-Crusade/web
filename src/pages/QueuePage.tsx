@@ -35,11 +35,19 @@ export default function QueuePage() {
     <section className="flex flex-col items-center gap-4 py-16 text-center" aria-live="polite">
       <Loader2 className="size-10 animate-spin text-primary" aria-hidden />
       <h1 className="text-2xl font-bold tracking-tight">예매 대기 중이에요</h1>
-      {data?.data?.position != null ? (
-        <p className="text-muted-foreground">
-          내 순번 <span className="font-semibold text-foreground">{data.data.position}</span>번 —
-          곧 입장돼요.
-        </p>
+      {data?.data?.remaining != null ? (
+        <div className="space-y-1 text-muted-foreground">
+          {data.data.queue_number != null && (
+            <p>
+              내 대기 번호{' '}
+              <span className="font-semibold text-foreground">{data.data.queue_number}</span>번
+            </p>
+          )}
+          <p>
+            앞에 <span className="font-semibold text-foreground">{data.data.remaining}</span>명 남았어요
+            — 곧 입장돼요.
+          </p>
+        </div>
       ) : (
         <p className="text-muted-foreground">{data?.message ?? '대기열 정보를 확인하고 있어요...'}</p>
       )}
