@@ -34,4 +34,10 @@ describe('usePageParam', () => {
     act(() => result.current.goToPage(2));
     expect(result.current.page).toBe(2);
   });
+
+  it.each([0, -3, Number.NaN])('goToPage(%s) 같은 잘못된 값은 1로 정규화한다', (bad) => {
+    const { result } = renderHook(() => usePageParam(), { wrapper: wrapper('/events?page=5') });
+    act(() => result.current.goToPage(bad));
+    expect(result.current.page).toBe(1);
+  });
 });
