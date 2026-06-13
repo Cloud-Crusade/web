@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
 
 import { useAuth } from '@/features/auth/AuthContext';
-import { setReservationToken } from '@/lib/reservationToken';
+import { getReservationToken, setReservationToken } from '@/lib/reservationToken';
 import type { QueueResponse } from '@/types/queue';
 
 import { queueApi } from './api';
@@ -19,11 +18,23 @@ export function isQueueCompleted(data: QueueResponse | undefined): boolean {
   return data?.code === QUEUE_COMPLETED;
 }
 
+// 입장 판정 — COMPLETED 이면서 유효한(만료 안 된) 입장 토큰 보유. 토큰 만료 시 재대기열 대상.
+export function isQueueAdmitted(data: QueueResponse | undefined): boolean {
+  return isQueueCompleted(data) && getReservationToken() != null;
+}
+
 export function useQueueStatus(eventId: string) {
   const { isAuthenticated } = useAuth();
-  const query = useQuery({
+  return useQuery({
     queryKey: queueKeys.status(eventId),
-    queryFn: () => queueApi.getStatus(eventId),
+    // 입장 완료 시 발급 토큰을 즉시 저장 → 렌더 레이스 없이 게이트/인터셉터가 같은 토큰을 본다
+    queryFn: async () => {
+      const data = await queueApi.getStatus(eventId);
+      if (data.code === QUEUE_COMPLETED && data.data?.token) {
+        setReservationToken(data.data.token);
+      }
+      return data;
+    },
     enabled: isAuthenticated && !!eventId,
     staleTime: 0,
     refetchInterval: (q) => {
@@ -32,14 +43,4 @@ export function useQueueStatus(eventId: string) {
       return q.state.data?.code === QUEUE_COMPLETED ? false : QUEUE_POLL_INTERVAL_MS;
     },
   });
-
-  // 입장 완료 시 발급된 토큰을 저장 → 이후 요청의 RESERVATION 헤더로 주입(apiClient)
-  const token = query.data?.code === QUEUE_COMPLETED ? query.data.data?.token : undefined;
-  useEffect(() => {
-    if (token) {
-      setReservationToken(token);
-    }
-  }, [token]);
-
-  return query;
 }

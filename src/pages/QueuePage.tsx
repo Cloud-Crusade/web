@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 
 import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
-import { isQueueCompleted, useQueueStatus } from '@/features/queue/hooks';
+import { isQueueAdmitted, useQueueStatus } from '@/features/queue/hooks';
 
 export default function QueuePage() {
   const { eventId = '' } = useParams();
@@ -13,8 +13,8 @@ export default function QueuePage() {
     return <Navigate to="/events" replace />;
   }
 
-  // 입장 완료(COMPLETED) → 토큰은 useQueueStatus 가 저장, 예매 화면(이벤트 상세)으로 복귀
-  if (isQueueCompleted(data)) {
+  // 입장 완료 + 유효 토큰 보유 → 예매 화면(이벤트 상세)으로 복귀 (게이트와 동일 기준)
+  if (isQueueAdmitted(data)) {
     return <Navigate to={`/events/${eventId}`} replace />;
   }
 
