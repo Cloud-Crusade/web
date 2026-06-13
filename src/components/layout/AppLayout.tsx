@@ -1,8 +1,19 @@
-import { Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+
+import { useAuth } from '@/features/auth/AuthContext';
 
 import { Header } from './Header';
 
 export function AppLayout() {
+  const { pathname } = useLocation();
+  const { syncAuth } = useAuth();
+
+  // 페이지 이동마다 토큰 저장소 기준으로 로그인 상태를 다시 확인
+  useEffect(() => {
+    syncAuth();
+  }, [pathname, syncAuth]);
+
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
       <Header />
