@@ -18,16 +18,17 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PayAction } from '@/features/payments/components/PayAction';
 import { ReservationStatusBadge } from '@/features/reservations/components/ReservationStatusBadge';
-import { useCancelReservation, useReservation } from '@/features/reservations/hooks';
-import { toApiError } from '@/lib/apiError';
+import { useCancelReservation, useReservationStatus } from '@/features/reservations/hooks';
 import { formatDateTime } from '@/lib/format';
 
 export default function ReservationDetailPage() {
   const { reservationId = '' } = useParams();
-  const { data, isPending, isError, error } = useReservation(reservationId);
+  // 202 직후 단건이 아직 안 잡힐 수 있어 정착까지 폴링
+  const { data, hasTimedOut } = useReservationStatus(reservationId);
   const cancel = useCancelReservation();
 
-  if (reservationId && isPending) {
+  // 정착 전(폴링 중) — 스켈레톤
+  if (reservationId && !data && !hasTimedOut) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-1/3" />
@@ -36,11 +37,11 @@ export default function ReservationDetailPage() {
     );
   }
 
-  if (!reservationId || isError || !data) {
-    const notFound = !reservationId || (isError && toApiError(error).status === 404);
+  // 잘못된 id 또는 타임아웃까지 미정착 → 빈 상태
+  if (!reservationId || !data) {
     return (
       <EmptyState
-        title={notFound ? '예매를 찾을 수 없어요' : '예매를 불러오지 못했어요'}
+        title="예매를 찾을 수 없어요"
         action={
           <Button asChild variant="outline">
             <Link to="/reservations">내 예매로</Link>

@@ -37,6 +37,34 @@ describe('ReservationDetailPage', () => {
     expect(screen.getByLabelText('결제 수단')).toBeInTheDocument();
   });
 
+  it('202 직후 첫 조회가 404여도 폴링으로 잡아 예매 정보를 표시한다', async () => {
+    let calls = 0;
+    server.use(
+      http.get(`${BASE}/reservations/:reservationId`, ({ params }) => {
+        calls += 1;
+        if (calls === 1) {
+          return HttpResponse.json(
+            { code: 'RESERVATION_NOT_FOUND', message: '예매를 찾을 수 없습니다', details: {} },
+            { status: 404 },
+          );
+        }
+        return HttpResponse.json({
+          reservation_id: params.reservationId,
+          user_id: 'u1',
+          event_id: 'e1',
+          is_canceled: false,
+          reserved_num: 2,
+          created_at: '2026-06-01',
+          last_modified: null,
+        });
+      }),
+    );
+
+    renderDetail('r1');
+    // 첫 폴링 404 → 다음 폴링(1.5s)에서 200 → 표시
+    expect(await screen.findByText('2번', undefined, { timeout: 4000 })).toBeInTheDocument();
+  });
+
   it('취소된 예매에는 결제 액션을 숨긴다', async () => {
     server.use(
       http.get(`${BASE}/reservations/:reservationId`, ({ params }) =>
