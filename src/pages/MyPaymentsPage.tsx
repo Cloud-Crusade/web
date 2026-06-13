@@ -1,29 +1,21 @@
 import { Receipt } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { EmptyState } from '@/components/EmptyState';
 import { Pagination } from '@/components/Pagination';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PaymentCard } from '@/features/payments/components/PaymentCard';
 import { useMyPayments } from '@/features/payments/hooks';
+import { usePageParam } from '@/hooks/usePageParam';
 
 const PAGE_SIZE = 10;
 
 export default function MyPaymentsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const parsedPage = Number.parseInt(searchParams.get('page') ?? '1', 10);
-  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const { page, goToPage } = usePageParam();
 
-  const { data, isPending, isError, refetch } = useMyPayments({ page, size: PAGE_SIZE });
-
-  const goToPage = (next: number) => {
-    setSearchParams((prev) => {
-      const params = new URLSearchParams(prev);
-      params.set('page', String(next));
-      return params;
-    });
-  };
+  const { data, isPending, isError, error, refetch } = useMyPayments({ page, size: PAGE_SIZE });
 
   return (
     <section className="space-y-6">
@@ -36,12 +28,7 @@ export default function MyPaymentsPage() {
           ))}
         </div>
       ) : isError ? (
-        <div className="flex flex-col items-center gap-3 py-12 text-center">
-          <p className="text-muted-foreground">결제 내역을 불러오지 못했어요.</p>
-          <Button variant="outline" onClick={() => refetch()}>
-            다시 시도
-          </Button>
-        </div>
+        <QueryErrorState error={error} onRetry={refetch} message="결제 내역을 불러오지 못했어요." />
       ) : data.items.length === 0 ? (
         <EmptyState
           icon={Receipt}

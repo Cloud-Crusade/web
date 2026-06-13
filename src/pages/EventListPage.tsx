@@ -1,35 +1,26 @@
 import { CalendarOff, Plus } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { EmptyState } from '@/components/EmptyState';
 import { Pagination } from '@/components/Pagination';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/features/auth/AuthContext';
 import { EventCard } from '@/features/events/components/EventCard';
 import { useEvents } from '@/features/events/hooks';
+import { usePageParam } from '@/hooks/usePageParam';
 
 const PAGE_SIZE = 12;
 
 export default function EventListPage() {
   const { isAuthenticated } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  // 잘못된 page 파라미터(?page=foo 등)는 1로 폴백
-  const parsedPage = Number.parseInt(searchParams.get('page') ?? '1', 10);
-  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const { page, goToPage } = usePageParam();
 
-  const { data, isPending, isError, refetch, isPlaceholderData } = useEvents({
+  const { data, isPending, isError, error, refetch, isPlaceholderData } = useEvents({
     page,
     size: PAGE_SIZE,
   });
-
-  const goToPage = (next: number) => {
-    setSearchParams((prev) => {
-      const params = new URLSearchParams(prev);
-      params.set('page', String(next));
-      return params;
-    });
-  };
 
   return (
     <section className="space-y-6">
@@ -48,12 +39,7 @@ export default function EventListPage() {
       {isPending ? (
         <EventGridSkeleton />
       ) : isError ? (
-        <div className="flex flex-col items-center gap-3 py-12 text-center">
-          <p className="text-muted-foreground">행사를 불러오지 못했어요.</p>
-          <Button variant="outline" onClick={() => refetch()}>
-            다시 시도
-          </Button>
-        </div>
+        <QueryErrorState error={error} onRetry={refetch} message="행사를 불러오지 못했어요." />
       ) : data.items.length === 0 ? (
         <EmptyState
           icon={CalendarOff}
