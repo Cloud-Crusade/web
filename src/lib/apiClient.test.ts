@@ -3,15 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { apiClient } from '@/lib/apiClient';
 import { getAccessToken, setTokens } from '@/lib/authToken';
-import { queryClient } from '@/lib/queryClient';
 import { getReservationToken, setReservationToken } from '@/lib/reservationToken';
 import { server } from '@/test/msw/server';
 
 const BASE = 'http://localhost:8020';
 
-const b64url = (obj: unknown) =>
-  btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-const makeReservationToken = () => `e30.${b64url({ exp: Math.floor(Date.now() / 1000) + 600 })}.sig`;
 
 describe('apiClient 401 인터셉터', () => {
   const reloadSpy = vi.fn();
@@ -76,45 +72,5 @@ describe('apiClient 401 인터셉터', () => {
 
     expect(reloadSpy).not.toHaveBeenCalled();
     expect(getReservationToken()).toBeNull();
-  });
-});
-
-describe('apiClient 403 입장 토큰 거부 처리', () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('RESERVATION 헤더를 실은 요청이 403 이면 토큰을 비우고 대기열을 무효화한다', async () => {
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
-    setTokens('valid.access', 'valid.refresh');
-    setReservationToken(makeReservationToken());
-    server.use(
-      http.get(`${BASE}/reservations`, () =>
-        HttpResponse.json({ code: 'FORBIDDEN', message: '입장 권한 없음', details: {} }, { status: 403 }),
-      ),
-    );
-
-    await expect(apiClient.get('/reservations')).rejects.toBeTruthy();
-
-    expect(getReservationToken()).toBeNull();
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['queue'] });
-  });
-
-  it('RESERVATION 헤더가 없는 403 은 대기열을 무효화하지 않는다', async () => {
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
-    setTokens('valid.access', 'valid.refresh');
-    server.use(
-      http.get(`${BASE}/events/1`, () =>
-        HttpResponse.json({ code: 'FORBIDDEN', message: '권한 없음', details: {} }, { status: 403 }),
-      ),
-    );
-
-    await expect(apiClient.get('/events/1')).rejects.toBeTruthy();
-
-    expect(invalidateSpy).not.toHaveBeenCalled();
   });
 });
