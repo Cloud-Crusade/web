@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { apiClient } from '@/lib/apiClient';
 import { getAccessToken, setTokens } from '@/lib/authToken';
+import { getReservationToken, setReservationToken } from '@/lib/reservationToken';
 import { server } from '@/test/msw/server';
 
 const BASE = 'http://localhost:8020';
@@ -58,7 +59,8 @@ describe('apiClient 401 인터셉터', () => {
     expect(reloadSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('리프레시 토큰이 없는 401 은 새로고침 없이 그대로 실패한다', async () => {
+  it('리프레시 토큰이 없는 401 은 새로고침 없이 실패하고 잔여 토큰을 정리한다', async () => {
+    setReservationToken('reservation.token');
     server.use(
       http.get(`${BASE}/protected`, () =>
         HttpResponse.json({ code: 'INVALID_TOKEN', message: '만료', details: {} }, { status: 401 }),
@@ -68,5 +70,6 @@ describe('apiClient 401 인터셉터', () => {
     await expect(apiClient.get('/protected')).rejects.toBeTruthy();
 
     expect(reloadSpy).not.toHaveBeenCalled();
+    expect(getReservationToken()).toBeNull();
   });
 });

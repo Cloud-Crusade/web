@@ -1,6 +1,7 @@
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 
 import { clearTokens, getAccessToken, setTokens } from '@/lib/authToken';
+import { clearReservationToken } from '@/lib/reservationToken';
 import type { TokenPair } from '@/types/auth';
 
 interface AuthContextValue {
@@ -30,6 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       logout: () => {
         clearTokens();
+        // RESERVATION 헤더가 비로그인 요청에 새지 않도록 입장 토큰도 함께 정리
+        clearReservationToken();
         setIsAuthenticated(false);
       },
       syncAuth,

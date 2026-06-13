@@ -69,8 +69,11 @@ apiClient.interceptors.response.use(
     }
     config._retried = true;
 
-    // 리프레시 토큰이 없으면(비로그인) 갱신·새로고침 없이 그대로 실패 — 새로고침 루프 방지
+    // 리프레시 토큰이 없으면(비로그인) 갱신 불가 → 새로고침은 생략하되(루프 방지),
+    // 잔여 토큰이 헤더로 계속 붙어 401 을 반복하지 않도록 토큰 저장소는 정리한다.
     if (!getRefreshToken()) {
+      clearTokens();
+      clearReservationToken();
       return Promise.reject(toApiError(error));
     }
 
