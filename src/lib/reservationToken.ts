@@ -7,9 +7,10 @@ function readExpSeconds(token: string): number | null {
   const payload = token.split('.')[1];
   if (!payload) return null;
   try {
-    const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as {
-      exp?: unknown;
-    };
+    // base64url → base64 + atob 가 요구하는 '=' padding 복원(길이 4의 배수가 아닌 payload 디코딩 실패 방지)
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    const json = JSON.parse(atob(padded)) as { exp?: unknown };
     return typeof json.exp === 'number' ? json.exp : null;
   } catch {
     return null;
