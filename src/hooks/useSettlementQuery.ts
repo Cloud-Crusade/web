@@ -29,16 +29,9 @@ export function useSettlementQuery<T>({
   timeoutMs,
 }: Options<T>): Result<T> {
   const [hasTimedOut, setHasTimedOut] = useState(false);
+  // resetKey 변경·retry 마다 증가 → 타임아웃 타이머를 재시작하는 트리거
+  const [epoch, setEpoch] = useState(0);
   const startedAt = useRef(Date.now());
-  const tracked = useRef(resetKey);
-
-  // resetKey 가 바뀌면 새 폴링 시작 — 타임아웃 기준·상태 리셋
-  // (마운트 시점 고정이면 페이지를 오래 열어둔 뒤 시작 시 즉시 타임아웃됨)
-  if (resetKey !== tracked.current) {
-    tracked.current = resetKey;
-    startedAt.current = Date.now();
-    if (hasTimedOut) setHasTimedOut(false);
-  }
 
   const query = useQuery({
     queryKey,
@@ -53,17 +46,26 @@ export function useSettlementQuery<T>({
     },
   });
 
-  // 타임아웃까지 미정착이면 '지연'으로 표시 (refetchInterval 종료만으로는 리렌더가 안 일어남)
+  // resetKey 변경 = 새 폴링 대상 → 타임아웃 기준·상태 리셋(effect 에서, render-phase update 회피).
+  // (마운트 시점 고정이면 페이지를 오래 열어둔 뒤 시작 시 즉시 타임아웃됨)
   useEffect(() => {
-    if (!enabled || hasTimedOut || query.isSuccess) return;
-    const remaining = timeoutMs - (Date.now() - startedAt.current);
-    const timer = setTimeout(() => setHasTimedOut(true), Math.max(0, remaining));
+    startedAt.current = Date.now();
+    setHasTimedOut(false);
+    setEpoch((e) => e + 1);
+  }, [resetKey]);
+
+  // 타임아웃 타이머 — epoch(대상 변경·재시도) 가 바뀌면 이전 타이머 정리 후 새 기준으로 재스케줄.
+  useEffect(() => {
+    if (!enabled || query.isSuccess) return;
+    const remaining = Math.max(0, timeoutMs - (Date.now() - startedAt.current));
+    const timer = setTimeout(() => setHasTimedOut(true), remaining);
     return () => clearTimeout(timer);
-  }, [enabled, hasTimedOut, query.isSuccess, timeoutMs]);
+  }, [enabled, query.isSuccess, timeoutMs, epoch]);
 
   const retry = () => {
     startedAt.current = Date.now();
-    setHasTimedOut(false);
+    setHasTimedOut(false); // 폴링 재개(enabled 복원) + 즉시 재조회
+    setEpoch((e) => e + 1); // 타임아웃 타이머 재시작
   };
 
   return { data: query.data, isSettled: query.isSuccess, hasTimedOut, retry };

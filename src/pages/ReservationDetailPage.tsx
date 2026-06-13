@@ -24,21 +24,11 @@ import { formatDateTime } from '@/lib/format';
 export default function ReservationDetailPage() {
   const { reservationId = '' } = useParams();
   // 202 직후 단건이 아직 안 잡힐 수 있어 정착까지 폴링
-  const { data, hasTimedOut } = useReservationStatus(reservationId);
+  const { data, hasTimedOut, retry } = useReservationStatus(reservationId);
   const cancel = useCancelReservation();
 
-  // 정착 전(폴링 중) — 스켈레톤
-  if (reservationId && !data && !hasTimedOut) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-1/3" />
-        <Skeleton className="h-32 w-full rounded-lg" />
-      </div>
-    );
-  }
-
-  // 잘못된 id 또는 타임아웃까지 미정착 → 빈 상태
-  if (!reservationId || !data) {
+  // 잘못된 id → 빈 상태
+  if (!reservationId) {
     return (
       <EmptyState
         title="예매를 찾을 수 없어요"
@@ -48,6 +38,36 @@ export default function ReservationDetailPage() {
           </Button>
         }
       />
+    );
+  }
+
+  if (!data) {
+    // 타임아웃 — 실패·부재 단정 금지(비동기라 나중에 반영될 수 있음). 지연 안내 + 재시도 (04 룰셋)
+    if (hasTimedOut) {
+      return (
+        <div className="space-y-2 rounded-lg border border-border p-4" aria-live="polite">
+          <p className="text-sm font-medium">예매 확인이 지연되고 있어요.</p>
+          <p className="text-sm text-muted-foreground">
+            잠시 후 내 예매에서 확인하거나 다시 시도해 주세요.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => retry()}>
+              다시 시도
+            </Button>
+            <Button asChild variant="ghost">
+              <Link to="/reservations">내 예매로</Link>
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // 정착 전(폴링 중) — 스켈레톤
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-1/3" />
+        <Skeleton className="h-32 w-full rounded-lg" />
+      </div>
     );
   }
 
