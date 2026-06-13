@@ -89,7 +89,7 @@ describe('apiClient 403 입장 토큰 거부 처리', () => {
   });
 
   it('RESERVATION 헤더를 실은 요청이 403 이면 토큰을 비우고 대기열을 무효화한다', async () => {
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
     setTokens('valid.access', 'valid.refresh');
     setReservationToken(makeReservationToken());
     server.use(
@@ -105,7 +105,7 @@ describe('apiClient 403 입장 토큰 거부 처리', () => {
   });
 
   it('RESERVATION 헤더가 없는 403 은 대기열을 무효화하지 않는다', async () => {
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
     setTokens('valid.access', 'valid.refresh');
     server.use(
       http.get(`${BASE}/events/1`, () =>
