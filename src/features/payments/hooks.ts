@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef } from 'react';
 
 import { useAuth } from '@/features/auth/AuthContext';
+import { useSettlementQuery } from '@/hooks/useSettlementQuery';
 import type { PageParams } from '@/types/common';
 
 import { paymentApi } from './api';
@@ -35,28 +35,16 @@ export function usePayment(paymentHistoryId: string) {
   });
 }
 
-// 결제 생성(202) 직후 반영을 폴링으로 확인. 단건이 200 으로 잡히면(success) 폴링 종료.
+// 결제 생성(202) 직후 반영을 폴링으로 확인 — 단건이 200 으로 잡히거나 타임아웃까지.
 export function usePaymentStatus(paymentHistoryId: string | undefined) {
   const { isAuthenticated } = useAuth();
-  const startedAt = useRef(Date.now());
-  const trackedId = useRef(paymentHistoryId);
-  // 결제 id 가 새로 설정되면 폴링 시작 시점으로 타임아웃 기준을 리셋
-  // (마운트 시점 고정이면, 페이지를 오래 열어둔 뒤 결제 시작 시 즉시 타임아웃됨)
-  if (paymentHistoryId !== trackedId.current) {
-    trackedId.current = paymentHistoryId;
-    startedAt.current = Date.now();
-  }
-  return useQuery({
+  return useSettlementQuery({
     queryKey: paymentKeys.detail(paymentHistoryId ?? ''),
     queryFn: () => paymentApi.get(paymentHistoryId!),
+    resetKey: paymentHistoryId,
     enabled: isAuthenticated && !!paymentHistoryId,
-    staleTime: 0,
-    retry: false,
-    refetchInterval: (query) => {
-      if (query.state.status === 'success') return false; // 결제 기록 반영됨 → 완료
-      if (Date.now() - startedAt.current > PAYMENT_POLL_TIMEOUT_MS) return false; // 타임아웃
-      return PAYMENT_POLL_INTERVAL_MS; // 미반영(404 등) → 계속 폴링
-    },
+    intervalMs: PAYMENT_POLL_INTERVAL_MS,
+    timeoutMs: PAYMENT_POLL_TIMEOUT_MS,
   });
 }
 

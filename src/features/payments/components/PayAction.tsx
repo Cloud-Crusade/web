@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -14,11 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  PAYMENT_POLL_TIMEOUT_MS,
-  useCreatePayment,
-  usePaymentStatus,
-} from '@/features/payments/hooks';
+import { useCreatePayment, usePaymentStatus } from '@/features/payments/hooks';
 
 // 백엔드 제약 미러: payment_method 1~20자 (mock 문자열)
 const payFormSchema = z.object({
@@ -31,22 +27,14 @@ type PayFormValues = z.infer<typeof payFormSchema>;
 
 export function PayAction({ reservationId }: { reservationId: string }) {
   const [paymentId, setPaymentId] = useState<string>();
-  const [hasTimedOut, setHasTimedOut] = useState(false);
   const create = useCreatePayment();
-  // 타임아웃 후에는 폴링 비활성화 (undefined → enabled=false)
-  const { data: payment } = usePaymentStatus(hasTimedOut ? undefined : paymentId);
+  // 폴링·타임아웃은 훅이 관리 (정착 시 data, 미정착 타임아웃 시 hasTimedOut)
+  const { data: payment, hasTimedOut, retry: resetPoll } = usePaymentStatus(paymentId);
 
   const form = useForm<PayFormValues>({
     resolver: zodResolver(payFormSchema),
     defaultValues: { payment_method: '' },
   });
-
-  // 결제 접수 후 일정 시간 내 반영 안 되면 타임아웃 처리 (무한 '처리 중' 방지)
-  useEffect(() => {
-    if (paymentId == null || payment != null || hasTimedOut) return;
-    const timer = setTimeout(() => setHasTimedOut(true), PAYMENT_POLL_TIMEOUT_MS);
-    return () => clearTimeout(timer);
-  }, [paymentId, payment, hasTimedOut]);
 
   // 폴링으로 결제 기록이 잡힘 → 완료
   if (payment) {
@@ -62,7 +50,7 @@ export function PayAction({ reservationId }: { reservationId: string }) {
   }
 
   const retry = () => {
-    setHasTimedOut(false);
+    resetPoll();
     setPaymentId(undefined);
     form.reset();
   };
