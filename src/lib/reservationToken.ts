@@ -20,8 +20,8 @@ export function getReservationToken(): string | null {
   const token = localStorage.getItem(RESERVATION_KEY);
   if (!token) return null;
   const exp = readExpSeconds(token);
-  // exp 없음(손상/구버전) 또는 만료 → 정리하고 없는 것으로 취급(만료 토큰을 서버로 보내지 않는다)
-  if (exp === null || exp * 1000 <= Date.now()) {
+  // exp 가 있고 과거인 경우에만 정리 — exp 없음/파싱불가는 만료로 단정하지 않고 서버(authorizer)가 판정
+  if (exp !== null && exp * 1000 <= Date.now()) {
     localStorage.removeItem(RESERVATION_KEY);
     return null;
   }
